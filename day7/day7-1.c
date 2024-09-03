@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #define KEY_SIZE 30
-#define MAX_WIRES 200
-#define MAX_COMMANDS 600
+#define MAX_WIRES 1000
+#define MAX_COMMANDS 1000
 
 typedef enum {
     NONE,
@@ -68,6 +68,40 @@ FILE *fptr;
 
 bool isNumeric(char*);
 void strstrip(char* str);
+
+void runCommand(wirelist_t *list, command_t command){
+    wire_t *target = wfind(list, command.target);
+    uint16_t args[2] = {0}, arg_counter = command.arg_counter;
+    for(int i=0; i<arg_counter; i++){
+        if(command.args[i].is_wire){
+            args[i] = wfind(list, command.args[i].key)->count;
+        }else{
+            args[i] = command.args[i].num;
+        }
+    }
+
+    switch(command.gate_type){
+        case NONE:
+            target->count = args[0];
+            break;
+        case NOT:
+            target->count = ~args[0];
+            break;
+        case AND:
+            target->count = args[0] & args[1];
+            break;
+        case OR:
+            target->count = args[0] | args[1];
+            break;
+        case LSHIFT:
+            target->count = args[0] << args[1];
+            break;
+        case RSHIFT:
+            target->count = args[0] >> args[1];
+            break;
+    }
+}
+
 int main(){
 
     wire_t *pWirelist = malloc(sizeof(wire_t) * MAX_WIRES);
@@ -81,7 +115,6 @@ int main(){
 
     fptr = fopen("input7-1.txt", "r");
     char buffer[30] = {0};
-    printf("Hello, World!");
 
     while(fgets(buffer, 30, fptr)){
         // strip end newlines
@@ -96,7 +129,7 @@ int main(){
         char* token = strtok(buffer, " ");
 
         while(token != NULL){
-            printf("%s\n ", token);
+            //printf("%s\n ", token);
             if(isNumeric(token)){
                 arg_t new_arg;
                 new_arg.num = 0;
@@ -124,7 +157,7 @@ int main(){
                         new_command.gate_type = gate_type;
                         strcpy(new_command.target, token);
                         commandlist[commmand_counter] = new_command;
-                        printf("Current_command: %u", commmand_counter);
+                        //printf("Current_command: %u", commmand_counter);
                         commmand_counter++;
                     }else{
                         arg_t new_arg;
@@ -140,10 +173,16 @@ int main(){
         }
     }
     for(int i=0; i<commmand_counter; i++){
-        printf("Gate_type: %u, target: %s\n", commandlist[i].gate_type, commandlist[i].target);
+        //printf("Gate_type: %u, target: %s\n", commandlist[i].gate_type, commandlist[i].target);
+        runCommand(&wirelist, commandlist[i]);
+    }
+    for(int i=0; i<wirelist.wire_counter; i++){
+        
     }
     return 0;
 }
+
+
 
 bool isNumeric(char *a){
     return strspn(a, "0123456789") == strlen(a);
