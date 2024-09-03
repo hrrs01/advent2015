@@ -12,10 +12,9 @@ typedef struct {
 } wire;
 
 void wirelist_append(wire *wirelist, int *counter, wire newwire){
-    printf("Appending! \n");
     wirelist[*counter] = newwire;
     *counter += 1;
-    printf("Counter is currently: %d\n", *counter);
+
 }
 
 wire* wirelist_get(wire *wirelist, int *counter, char *keyword){
@@ -93,54 +92,7 @@ int main(){
 }
 
 void apply(wire *wirelist, int* wireCounter, char target_key[], char args[2][5], int argCount, uint16_t num, gate_type gate){
-    wire* target = wirelist_get(wirelist, wireCounter, target_key);
-    switch(argCount){
-        case 0:  
-            target->count = num;
-            printf("Wire %s set to %u \n", target->key, target->count);
-            return;
-            break;
-        case 1:
-            wire* arg = wirelist_get(wirelist, wireCounter, args[0]);
-            switch(gate){
-                case AND:
-                    target->count = arg->count & num;
-                    printf("Wire %s set to %u & %s = %u \n", target->key, num, arg->key, target->count);
-                    break;
-                case OR:
-                    target->count = arg->count | num;
-                    printf("Wire %s set to %u | %s = %u \n", target->key, num, arg->key, target->count);
-                    break;
-                case NOT:
-                    target->count = ~(arg->count);
-                    printf("Wire %s set to ~%s = %u \n", target->key, arg->key, target->count);
-                    break;
-                case LSHIFT:
-                    target->count = arg->count << num;
-                    printf("Wire %s set to %s << %u = %u \n", target->key, arg->key, num, target->count);
-                    break;
-                case RSHIFT:
-                    target->count = arg->count >> num;
-                    printf("Wire %s set to %s >> %u = %u \n", target->key, arg->key, num, target->count);
-                    break;
-            }
-            break;
-        case 2:
-            wire* arg1 = wirelist_get(wirelist, wireCounter, args[0]);
-            wire* arg2 = wirelist_get(wirelist, wireCounter, args[1]);
-            printf("WireCounter: %d\n ", *wireCounter);
-            switch(gate){
-                case AND:
-                    (*target).count = arg1->count & arg2->count;
-                    printf("Wire %s set to %s & %s = %u \n", target->key, arg1->key, arg2->key, target->count);
-                    break;
-                case OR:
-                    //(*target).count = arg->count | arg2->count;
-                    printf("Wire %s set to %s | %s = %u \n", target->key, arg1->key, arg2->key, target->count);
-                    break;
-            }
-            break;
-    }
+    
 }
 
 bool isNumeric(char *a){
