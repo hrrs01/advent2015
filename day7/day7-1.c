@@ -4,97 +4,150 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define KEY_SIZE 30
 #define MAX_WIRES 200
-
-typedef struct {
-    char key[30];
-    uint16_t count;
-} wire;
-
-void wirelist_append(wire *wirelist, int *counter, wire newwire){
-    wirelist[*counter] = newwire;
-    *counter += 1;
-
-}
-
-wire* wirelist_get(wire *wirelist, int *counter, char *keyword){
-    
-    for(int i=0;i<(*counter);i++){
-        if(strcmp(wirelist[i].key, keyword) == 0){
-            return &wirelist[i];
-        }
-    }
-    wire newwire;
-    strcpy(newwire.key, keyword);
-    newwire.count = 0;
-    wirelist_append(wirelist, counter, newwire);
-    return &wirelist[*counter];
-}
+#define MAX_COMMANDS 600
 
 typedef enum {
     NONE,
+    NOT,
     AND,
     OR,
-    NOT,
-    RSHIFT,
-    LSHIFT    
-} gate_type;
+    LSHIFT,
+    RSHIFT
+} gate_t;
+
+typedef struct {
+    int num;
+    char key[KEY_SIZE];
+    bool is_wire;
+} arg_t;
+
+typedef struct {
+    char key[KEY_SIZE];
+    uint16_t count;
+} wire_t;
+
+typedef struct {
+    wire_t *wires;
+    uint16_t wire_counter;
+    uint16_t max_wires;
+} wirelist_t;
+
+typedef struct {
+    arg_t args[2];
+    gate_t gate_type;
+    uint8_t arg_counter;
+    char target[KEY_SIZE];
+} command_t;
+
+wire_t* wappend(wirelist_t *list, char *key){
+    if(list->wire_counter >= list->max_wires){
+        return NULL;
+    }
+    wire_t new_wire;
+    strcpy(new_wire.key, key);
+    new_wire.count = 0;
+    list->wires[list->wire_counter] = new_wire;
+    list->wire_counter += 1;
+    return &(list->wires[list->wire_counter - 1]);
+    
+}
+
+wire_t* wfind(wirelist_t *list, char *key){
+    for(int i=0; i<list->wire_counter; i++){
+        if(strcmp(key, (list->wires[i]).key)){
+            return &(list->wires[i]);
+        }
+    }
+    return wappend(list, key);
+}
 
 
 FILE *fptr;
 
 bool isNumeric(char*);
-void apply(wire *wirelist, int* wireCounter, char target[], char args[2][5], int argCount, uint16_t num, gate_type gate);
-
+void strstrip(char* str);
 int main(){
 
-    wire *wirelist = malloc(sizeof(wire) * MAX_WIRES);
-    int *wireCounter = malloc(sizeof(int) * 3);
-    *wireCounter = 0;
+    wire_t *pWirelist = malloc(sizeof(wire_t) * MAX_WIRES);
+    wirelist_t wirelist;
+    wirelist.wire_counter = 0;
+    wirelist.max_wires = MAX_WIRES;
+    wirelist.wires = pWirelist;
+
+    command_t *commandlist = malloc(sizeof(command_t) * MAX_COMMANDS);
+    uint16_t commmand_counter = 0;
+
     fptr = fopen("input7-1.txt", "r");
     char buffer[30] = {0};
+    printf("Hello, World!");
 
     while(fgets(buffer, 30, fptr)){
-        buffer[strcspn(buffer, "\n")] = 0; // Strip newline
+        // strip end newlines
+        strstrip(buffer);
+        // Prepare for getting arguments
+        arg_t args[2] = {0};
+        uint8_t arg_counter = 0;
+
+        bool target = false;
+        gate_t gate_type = NONE;
 
         char* token = strtok(buffer, " ");
-        uint16_t num = 0;
-        char args[2][5] = {0};
-        int argCount = 0;
-        gate_type gate = NONE;
+
         while(token != NULL){
+            printf("%s\n ", token);
             if(isNumeric(token)){
-                num = atoi(token);
+                arg_t new_arg;
+                new_arg.num = 0;
+                new_arg.is_wire = false;
+                args[arg_counter] = new_arg;
             }else{
                 if(strcmp(token, "->") == 0){
-                    token = strtok(NULL, " ");
-                    apply(wirelist, wireCounter, token, args, argCount, num, gate);
+                    target = true;
                 }else if(strcmp(token, "OR") == 0){
-                    gate = OR;
+                    gate_type = OR;
                 }else if(strcmp(token, "AND") == 0){
-                    gate = AND;
+                    gate_type = AND;
                 }else if(strcmp(token, "RSHIFT") == 0){
-                    gate = RSHIFT;
+                    gate_type = RSHIFT;
                 }else if(strcmp(token, "NOT") == 0){
-                    gate = NOT;
+                    gate_type = NOT;
                 }else if(strcmp(token, "LSHIFT") == 0){
-                    gate = LSHIFT;
+                    gate_type = LSHIFT;
                 }else{
-                    strcpy(args[argCount], token);
-                    argCount++;
+                    if(target){
+                        command_t new_command;
+                        new_command.args[0] = args[0];
+                        new_command.args[1] = args[1];
+                        new_command.arg_counter = arg_counter;
+                        new_command.gate_type = gate_type;
+                        strcpy(new_command.target, token);
+                        commandlist[commmand_counter] = new_command;
+                        printf("Current_command: %u", commmand_counter);
+                        commmand_counter++;
+                    }else{
+                        arg_t new_arg;
+                        new_arg.is_wire = true;
+                        new_arg.num = 0;
+                        strcpy(new_arg.key, token);
+                        args[arg_counter] = new_arg;
+                    }
                 }
             }
 
             token = strtok(NULL, " ");
         }
     }
+    for(int i=0; i<commmand_counter; i++){
+        printf("Gate_type: %u, target: %s\n", commandlist[i].gate_type, commandlist[i].target);
+    }
     return 0;
-}
-
-void apply(wire *wirelist, int* wireCounter, char target_key[], char args[2][5], int argCount, uint16_t num, gate_type gate){
-    
 }
 
 bool isNumeric(char *a){
     return strspn(a, "0123456789") == strlen(a);
+}
+void strstrip(char* str){
+    str[strcspn(str, "\n")] = 0;
 }
