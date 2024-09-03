@@ -43,13 +43,6 @@ typedef struct {
 } command_t;
 
 
-
-void wreset(wirelist_t *list){
-    for(int i=0;i<list->wire_counter;i++){
-
-    }
-}
-
 wire_t* wappend(wirelist_t *list, char *key){
     if(list->wire_counter >= list->max_wires){
         return NULL;
