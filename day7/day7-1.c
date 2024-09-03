@@ -26,6 +26,7 @@ typedef struct {
 typedef struct {
     char key[KEY_SIZE];
     uint16_t count;
+    bool completed;
 } wire_t;
 
 typedef struct {
@@ -48,6 +49,7 @@ wire_t* wappend(wirelist_t *list, char *key){
     wire_t new_wire;
     strcpy(new_wire.key, key);
     new_wire.count = 0;
+    new_wire.completed = false;
     list->wires[list->wire_counter] = new_wire;
     list->wire_counter += 1;
     //printf("Wire Counter: %u\n", list->wire_counter);
@@ -72,15 +74,23 @@ FILE *fptr;
 bool isNumeric(char*);
 void strstrip(char* str);
 
-void runCommand(wirelist_t *list, command_t command){
+bool runCommand(wirelist_t *list, command_t command){
     //printf("Running Command!\n");
     //printf("Trying to find target: \"%s\"\n", command.target);
     wire_t *target = wfind(list, command.target);
+    if(target->completed){
+        return true;
+    }
     uint16_t args[2] = {0}, arg_counter = command.arg_counter;
     for(int i=0; i<arg_counter; i++){
         if(command.args[i].is_wire == true){
             //printf("Trying to find target: \"%s\"\n", command.args[i].key);
-            args[i] = wfind(list, command.args[i].key)->count;
+            wire_t* argwire = wfind(list, command.args[i].key);
+            if(!argwire->completed){
+                return false;
+            }
+            args[i] = argwire->count;
+            
         }else{
             args[i] = command.args[i].num;
         }
@@ -89,7 +99,7 @@ void runCommand(wirelist_t *list, command_t command){
     switch(command.gate_type){
         case NONE:
             target->count = args[0];
-            printf("Target %s set to %u, arg was %u \n", target->key, target->count, args[0]);
+            //printf("Target %s set to %u, arg was %u \n", target->key, target->count, args[0]);
             break;
         case NOT:
             target->count = ~args[0];
@@ -107,6 +117,8 @@ void runCommand(wirelist_t *list, command_t command){
             target->count = args[0] >> args[1];
             break;
     }
+    target->completed = true;
+    return true;
     
 }
 
@@ -185,16 +197,20 @@ int main(){
             token = strtok(NULL, " ");
         }
     }
-    for(int i=0; i<commmand_counter; i++){
-        ////printf("Gate_type: %u, target: %s\n", commandlist[i].gate_type, commandlist[i].target);
-        runCommand(&wirelist, commandlist[i]);
-    }
-    //printf("Wire_Count: %u\n", wirelist.wire_counter);
-    for(int i=0; i<wirelist.wire_counter; i++){
-        //printf("Wire: %s, Value: %u \n", wirelist.wires[i].key, wirelist.wires[i].count);
+    
+    while(1){
+        bool completed = true;
+        for(int i=0; i<commmand_counter; i++){
+            ////printf("Gate_type: %u, target: %s\n", commandlist[i].gate_type, commandlist[i].target);
+            //printf("completed: %u", completed);
+            completed = runCommand(&wirelist, commandlist[i]) && completed;
+        }
+        if(completed){
+            break;
+        }
     }
 
-    wire_t* check_key = wfind(&wirelist, "lx");
+    wire_t* check_key = wfind(&wirelist, "a");
     printf("%s: %u",check_key->key, check_key->count);
     return 0;
 }
