@@ -1,8 +1,0 @@
-[
-{
-  "directory": "C:/Users/haava/Documents/GitHub/advent2015/day9/build",
-  "command": "gcc    -o CMakeFiles/main.dir/main.c.obj -c /C/Users/haava/Documents/GitHub/advent2015/day9/main.c",
-  "file": "C:/Users/haava/Documents/GitHub/advent2015/day9/main.c",
-  "output": "CMakeFiles/main.dir/main.c.obj"
-}
-]
