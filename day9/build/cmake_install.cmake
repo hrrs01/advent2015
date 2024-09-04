@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/hrrs01/Documents/ctest/advent2015/day9
+# Install script for directory: C:/Users/haava/Documents/GitHub/advent2015/day9
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/hrrs01/Documents/ctest/advent2015/day9/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/haava/Documents/GitHub/advent2015/day9/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
