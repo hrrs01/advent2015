@@ -56,29 +56,31 @@ bool hasVisited(city_t* visited[], int* vc, road_t* current_road, city_t* curren
 
 int findShortestRoute(city_t *cities, int *cc, city_t *visited[], int *vc,
                       char *home_name) {
-  city_t *current_city = findCity(cities, cc, home_name);
-  int total_length = 0;
-  while (*vc < *cc) {
-    visited[*vc] = current_city;
-    *vc += 1;
-    road_t *shortest_road;
-    int shortest_length = 100000;
-    for (int i = 0; i < current_city->road_counter; i++) {
-      road_t *current_road = current_city->roads[i];
-      if (current_road->length < shortest_length && !hasVisited(visited, vc, current_road, current_city)) {
-        shortest_road = current_road;
-        shortest_length = shortest_road->length;
-      }
+    city_t *current_city = findCity(cities, cc, home_name);
+    int total_length = 0;
+    while (*vc < *cc) {
+        road_t *shortest_road;
+        int shortest_length = 100000;
+        for (int i = 0; i < current_city->road_counter; i++) {
+            road_t *current_road = current_city->roads[i];
+            if (current_road->length < shortest_length && !hasVisited(visited, vc, current_road, current_city)) {
+                shortest_road = current_road;
+                shortest_length = shortest_road->length;
+            }
+        }
+        total_length += shortest_length;
+        if(strcmp(current_city->name, shortest_road->targets[0]->name) == 0){
+            printf("Took the road between: %s and %s adding %u\n", current_city->name, shortest_road->targets[1]->name, shortest_length );
+            current_city = shortest_road->targets[1];
+        }else{
+            printf("Took the road between: %s and %s adding %u\n", current_city->name, shortest_road->targets[0]->name, shortest_length );
+            current_city = shortest_road->targets[0];
+        }
+        visited[*vc] = current_city;
+        *vc += 1;
     }
-    total_length += shortest_length;
-    if(strcmp(current_city->name, shortest_road->targets[0]->name) == 0){
-        current_city = shortest_road->targets[1];
-    }else{
-        current_city = shortest_road->targets[0];
-    }
-  }
-  printf("Shortest length was: %u\n", total_length);
-  return total_length;
+    printf("Shortest length was: %u\n", total_length);
+    return total_length;
 }
 
 void addRoadToCity(city_t* cities, int *cc, road_t* roads, int *rc,  char* city_name, char* dest_name, int road_length){
@@ -132,7 +134,10 @@ int main(){
         addRoadToCity(cities, &city_counter, roads, &road_counter, target1, target2, length);
     }
     for(int i=0;i<city_counter;i++){
-        
+        for(int y=0;y<visited_counter;y++){
+            already_visited[y] = 0;
+        }
+        visited_counter = 0;
         findShortestRoute(cities, &city_counter, already_visited, &visited_counter, cities[i].name);
     }
     return 0;
